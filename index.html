@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gewohnheiten">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Gewohnheiten</title>
+<style>
+:root{
+  --bg:#000;
+  --card:#1c1c1e;
+  --card2:#2c2c2e;
+  --sep:rgba(84,84,88,.6);
+  --label:#fff;
+  --label2:rgba(235,235,245,.6);
+  --label3:rgba(235,235,245,.3);
+  --label4:rgba(235,235,245,.16);
+  --accent:#0a84ff;
+  --accent-soft:rgba(10,132,255,.22);
+  --red:#ff453a;
+  --fill:rgba(118,118,128,.24);
+  --seg-on:#636366;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--label);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+body{min-height:100vh;overscroll-behavior-y:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;text-align:inherit}
+button:disabled{cursor:default}
+.app{max-width:560px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 4px) 16px calc(env(safe-area-inset-bottom) + 100px)}
+
+/* Kopfbereich */
+.topbar{display:flex;justify-content:space-between;align-items:center;height:44px;margin:0 -10px}
+.iconbtn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:var(--accent);border-radius:22px}
+.iconbtn svg{width:25px;height:25px}
+.iconbtn:active{opacity:.45}
+.title{font-size:34px;font-weight:700;letter-spacing:.37px;line-height:41px;margin:2px 0 0}
+.subtitle{color:var(--label2);font-size:15px;margin:2px 0 18px;display:flex;align-items:center;gap:10px;min-height:24px}
+.pill{background:var(--fill);color:var(--accent);font-size:13px;font-weight:600;padding:4px 11px;border-radius:999px}
+.pill:active{opacity:.5}
+
+/* Wochenstreifen Tagesansicht */
+.strip{display:flex;align-items:center;margin:0 -8px 22px}
+.nav{width:30px;height:60px;color:var(--label3);display:flex;align-items:center;justify-content:center;flex:none}
+.nav svg{width:10px;height:17px}
+.nav:active{opacity:.5}
+.days{flex:1;display:grid;grid-template-columns:repeat(7,1fr)}
+.day{display:flex;flex-direction:column;align-items:center;gap:4px;padding:2px 0}
+.day .wd{font-size:12px;color:var(--label2);font-weight:500}
+.day .num{width:36px;height:36px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:500;transition:background .15s}
+.day.today .num{color:var(--accent);font-weight:700}
+.day.future .num{color:var(--label3)}
+.day.sel .num{background:var(--label);color:#000}
+.day.sel.today .num{background:var(--accent);color:#000}
+.day .dot{width:5px;height:5px;border-radius:3px}
+.dot.full{background:var(--accent)}
+.dot.part{background:var(--label3)}
+
+/* Zusammenfassung */
+.summary{display:flex;align-items:center;gap:16px;background:var(--card);border-radius:14px;padding:14px 16px;margin-bottom:26px}
+.ring{width:56px;height:56px;flex:none}
+.summary .big{font-size:22px;font-weight:700;letter-spacing:.35px}
+.summary .small{font-size:15px;color:var(--label2);margin-top:2px}
+
+/* Listen */
+.section{margin-bottom:26px}
+.shead{font-size:13px;color:var(--label2);text-transform:uppercase;letter-spacing:-.08px;padding:0 16px 7px}
+.group{background:var(--card);border-radius:14px;overflow:hidden}
+.row{display:flex;align-items:center;min-height:60px;padding:0 0 0 16px;position:relative}
+.row+.row::before{content:"";position:absolute;top:0;left:58px;right:0;height:.5px;background:var(--sep)}
+.check{width:28px;height:28px;border-radius:50%;border:2px solid var(--label3);flex:none;display:flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s;margin-right:14px}
+.check svg{width:15px;height:15px;opacity:0;transition:opacity .15s}
+.check.on{background:var(--accent);border-color:var(--accent)}
+.check.on svg{opacity:1}
+.check:disabled{opacity:.35}
+.pop{animation:pop .3s ease}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.2)}100%{transform:scale(1)}}
+.txt{flex:1;min-width:0;padding:10px 16px 10px 0;display:flex;align-items:center;gap:10px;align-self:stretch}
+.txt:active{opacity:.6}
+.txtin{flex:1;min-width:0}
+.name{font-size:17px;line-height:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row.done .name{color:var(--label2)}
+.sub{font-size:13px;color:var(--label2);margin-top:2px}
+.sub.ok{color:var(--accent)}
+.chev{width:8px;height:13px;flex:none;color:var(--label3)}
+.mini{height:4px;border-radius:2px;background:var(--fill);margin-top:7px;overflow:hidden}
+.mini span{display:block;height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
+
+.note{font-size:13px;color:var(--label2);padding:0 16px;margin:-16px 0 26px}
+.empty{background:var(--card);border-radius:14px;padding:30px 20px;text-align:center;margin-top:8px}
+.empty h3{margin:0 0 6px;font-size:17px;font-weight:600}
+.empty p{margin:0 0 18px;color:var(--label2);font-size:15px;line-height:20px}
+.btn{display:block;width:100%;background:var(--accent);color:#000;font-size:17px;font-weight:600;border-radius:14px;padding:14px 20px;text-align:center}
+.btn:active{opacity:.7}
+
+.banner{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:14px;padding:12px 16px;margin-bottom:22px}
+.banner .t{flex:1;font-size:15px}
+.banner small{display:block;color:var(--label2);font-size:13px;margin-top:2px}
+.banner button{color:var(--accent);font-weight:600;font-size:15px}
+
+/* Wochenansicht */
+.weeknav{display:flex;align-items:center;justify-content:space-between;margin:0 -8px 18px}
+.weeknav .range{flex:1;text-align:center;font-size:15px;color:var(--label2)}
+.whead{display:grid;grid-template-columns:repeat(7,1fr);padding:0 10px;margin-bottom:8px}
+.wh{display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 0;border-radius:10px;text-align:center}
+.wh:active{background:var(--fill)}
+.wh .wd{font-size:12px;color:var(--label2);font-weight:500}
+.wh .n{font-size:15px;font-weight:600}
+.wh.today .wd,.wh.today .n{color:var(--accent)}
+.wcard{padding:12px 10px 12px;position:relative}
+.wcard+.wcard::before{content:"";position:absolute;top:0;left:16px;right:0;height:.5px;background:var(--sep)}
+.wtop{display:flex;align-items:center;gap:8px;padding:0 6px 8px;width:100%}
+.wtop:active{opacity:.6}
+.wname{font-size:17px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+.wmeta{font-size:13px;color:var(--label2);flex:none}
+.wmeta.ok{color:var(--accent)}
+.cells{display:grid;grid-template-columns:repeat(7,1fr)}
+.cell{display:flex;align-items:center;justify-content:center;height:38px}
+.cell i{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--label3);transition:background .15s,border-color .15s}
+.cell i svg{width:14px;height:14px;opacity:0}
+.cell.done i{background:var(--accent);border-color:var(--accent)}
+.cell.done i svg{opacity:1}
+.cell.future i{border-color:var(--label4)}
+.cell.off i{width:6px;height:6px;border:0;background:var(--label4)}
+.cell.na i{border:0}
+.wbar{height:4px;border-radius:2px;background:var(--fill);margin:8px 6px 0;overflow:hidden}
+.wbar span{display:block;height:100%;background:var(--accent);border-radius:2px}
+
+/* Tab-Leiste */
+.tabbar{position:fixed;left:0;right:0;bottom:0;background:rgba(22,22,23,.82);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--sep);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);z-index:10}
+.tab{flex:1;max-width:180px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0 5px;color:var(--label3);font-size:10px;font-weight:500;text-align:center}
+.tab svg{width:27px;height:27px}
+.tab.active{color:var(--accent)}
+
+/* Sheet */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:opacity .25s;z-index:20}
+.overlay.open{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;background:var(--card);border-radius:14px 14px 0 0;transform:translateY(105%);transition:transform .34s cubic-bezier(.32,.72,0,1);z-index:21;max-height:92vh;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom)}
+.sheet.open{transform:none}
+.grabber{width:36px;height:5px;border-radius:3px;background:var(--label3);margin:6px auto 0;flex:none}
+.shbar{display:flex;align-items:center;justify-content:space-between;height:50px;padding:0 16px;flex:none}
+.shbar .t{font-size:17px;font-weight:600;text-align:center;flex:1}
+.shbar button,.shbar .sp{color:var(--accent);font-size:17px;min-width:90px}
+.shbar .r{text-align:right;font-weight:600}
+.shbar button:disabled{color:var(--label3)}
+.shbody{overflow-y:auto;padding:10px 16px 28px;-webkit-overflow-scrolling:touch}
+.label{font-size:13px;color:var(--label2);text-transform:uppercase;letter-spacing:-.08px;padding:0 16px 7px}
+.field{background:var(--card2);border-radius:12px;margin-bottom:24px;overflow:hidden}
+.field>*+*{border-top:.5px solid var(--sep)}
+.field input[type=text]{width:100%;background:transparent;border:0;color:var(--label);font-size:17px;padding:14px 16px;outline:none;font-family:inherit}
+.field input::placeholder{color:var(--label3)}
+.foot{font-size:13px;color:var(--label2);padding:0 16px;margin:-16px 0 24px;line-height:18px}
+.foot.warn{color:var(--red)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--fill);border-radius:9px;padding:2px;margin-bottom:24px}
+.seg button{padding:7px 0;font-size:13px;font-weight:500;border-radius:7px;text-align:center;transition:background .15s}
+.seg button.on{background:var(--seg-on);font-weight:600;box-shadow:0 3px 8px rgba(0,0,0,.12)}
+.chips{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:24px}
+.chip{height:42px;border-radius:21px;background:var(--card2);font-size:15px;font-weight:500;text-align:center;transition:background .15s}
+.chip.on{background:var(--accent);color:#000;font-weight:600}
+.frow{display:flex;align-items:center;justify-content:space-between;padding:0 16px;min-height:50px;gap:12px;font-size:17px}
+.muted{color:var(--label2)}
+.stepwrap{display:flex;align-items:center;gap:12px}
+.stepval{color:var(--label2);font-size:17px;min-width:28px;text-align:right}
+.step{display:flex;background:var(--fill);border-radius:9px;overflow:hidden}
+.step button{width:46px;height:32px;font-size:20px;text-align:center;line-height:32px}
+.step button+button{border-left:.5px solid var(--sep)}
+.step button:disabled{color:var(--label3)}
+.frow input[type=date]{background:var(--fill);color:var(--label);border:0;border-radius:8px;padding:6px 10px;font-size:17px;font-family:inherit;min-height:34px}
+.lrow{display:block;width:100%;padding:14px 16px;font-size:17px;color:var(--accent);text-align:left}
+.lrow:active{background:rgba(255,255,255,.05)}
+.lrow.danger{color:var(--red)}
+.arow{display:flex;align-items:center;gap:10px;padding:10px 16px;min-height:56px}
+.atxt{flex:1;min-width:0}
+.abtn{font-size:15px;color:var(--accent);padding:6px 4px}
+.abtn.red{color:var(--red)}
+
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 72px);transform:translate(-50%,20px);background:var(--card2);color:var(--label);font-size:15px;padding:10px 16px;border-radius:12px;opacity:0;transition:opacity .2s,transform .2s;z-index:30;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<nav class="tabbar">
+  <button class="tab" data-act="tab" data-v="day" id="tab-day">
+    <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2"><circle cx="14" cy="14" r="11"/><path d="M9 14.5l3.4 3.4L19 11" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span>Heute</span>
+  </button>
+  <button class="tab" data-act="tab" data-v="week" id="tab-week">
+    <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5.5" width="21" height="19" rx="4"/><path d="M3.5 11h21M9 3v4M19 3v4"/><circle cx="9" cy="16" r="1.1" fill="currentColor" stroke="none"/><circle cx="14" cy="16" r="1.1" fill="currentColor" stroke="none"/><circle cx="19" cy="16" r="1.1" fill="currentColor" stroke="none"/><circle cx="9" cy="20.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="14" cy="20.5" r="1.1" fill="currentColor" stroke="none"/></svg>
+    <span>Woche</span>
+  </button>
+</nav>
+
+<div class="overlay" id="overlay" data-act="close"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="importfile" accept="application/json,.json" style="display:none">
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- Konstanten und Datumsfunktionen ---------- */
+  var KEY = 'gewohnheiten-v1';
+  var WD = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+  var WDL = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+  var MON = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+  var MONS = ['Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni', 'Juli', 'Aug.', 'Sep.', 'Okt.', 'Nov.', 'Dez.'];
+
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function toKey(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function fromKey(k) { var p = k.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function addDays(k, n) { var d = fromKey(k); d.setDate(d.getDate() + n); return toKey(d); }
+  function wdOf(k) { return (fromKey(k).getDay() + 6) % 7; }
+  function mondayOf(k) { return addDays(k, -wdOf(k)); }
+  function todayKey() { return toKey(new Date()); }
+  function daysBetween(a, b) { return Math.round((fromKey(b) - fromKey(a)) / 86400000); }
+  function isoWeek(k) {
+    var d = fromKey(k);
+    d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
+    var w1 = new Date(d.getFullYear(), 0, 4);
+    return 1 + Math.round(((d - w1) / 86400000 - 3 + ((w1.getDay() + 6) % 7)) / 7);
+  }
+  function fmtShort(k) { var d = fromKey(k); return d.getDate() + '. ' + MONS[d.getMonth()] + ' ' + d.getFullYear(); }
+  function fmtRange(a, b) {
+    var x = fromKey(a), y = fromKey(b);
+    if (x.getMonth() === y.getMonth()) return x.getDate() + '.\u2009\u2013\u2009' + y.getDate() + '. ' + MON[y.getMonth()] + ' ' + y.getFullYear();
+    return x.getDate() + '. ' + MONS[x.getMonth()] + ' \u2013 ' + y.getDate() + '. ' + MONS[y.getMonth()] + ' ' + y.getFullYear();
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+  /* ---------- Daten ---------- */
+  function fresh() { return { version: 1, habits: [], done: {}, lastExport: null, firstUse: todayKey() }; }
+  function normalize(s) {
+    if (!s || !Array.isArray(s.habits)) return null;
+    var out = {
+      version: 1,
+      done: (s.done && typeof s.done === 'object') ? s.done : {},
+      lastExport: s.lastExport || null,
+      firstUse: s.firstUse || todayKey(),
+      habits: s.habits.filter(function (h) { return h && h.id && h.name; }).map(function (h) {
+        return {
+          id: String(h.id),
+          name: String(h.name),
+          type: ['daily', 'weekdays', 'weekly'].indexOf(h.type) >= 0 ? h.type : 'daily',
+          days: Array.isArray(h.days) ? h.days.map(Number).filter(function (n) { return n >= 0 && n <= 6; }) : [],
+          target: Math.min(7, Math.max(1, parseInt(h.target, 10) || 1)),
+          start: /^\d{4}-\d{2}-\d{2}$/.test(h.start) ? h.start : todayKey(),
+          archivedAt: h.archivedAt || null
+        };
+      })
+    };
+    return out;
+  }
+
+  var state = fresh();
+  var storageOK = true;
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (raw) { var s = normalize(JSON.parse(raw)); if (s) state = s; }
+    else localStorage.setItem(KEY, JSON.stringify(state));
+  } catch (e) { storageOK = false; }
+
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); storageOK = true; }
+    catch (e) { storageOK = false; toast('Speichern nicht möglich'); }
+  }
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function () {}); } catch (e) {}
+
+  /* ---------- Logik ---------- */
+  function active(h, k) { return k >= h.start && (!h.archivedAt || k < h.archivedAt); }
+  function due(h, k) { return active(h, k) && (h.type === 'daily' || (h.type === 'weekdays' && h.days.indexOf(wdOf(k)) >= 0)); }
+  function isDone(h, k) { return !!(state.done[h.id] && state.done[h.id][k]); }
+  function weekCount(h, mon) {
+    var c = 0;
+    for (var i = 0; i < 7; i++) { var k = addDays(mon, i); if (active(h, k) && isDone(h, k)) c++; }
+    return c;
+  }
+  function activeInWeek(h, mon) {
+    for (var i = 0; i < 7; i++) if (active(h, addDays(mon, i))) return true;
+    return false;
+  }
+  function daysLabel(h) {
+    return h.days.slice().sort().map(function (d) { return WD[d]; }).join(' \u00b7 ');
+  }
+
+  /* ---------- UI-Zustand ---------- */
+  var view = 'day';
+  var sel = todayKey();
+  var wk = mondayOf(sel);
+  var lastToday = todayKey();
+  var popKey = null;
+  var sheetMode = null;
+  var form = null;
+
+  /* ---------- Icons ---------- */
+  var IC = {
+    check: '<svg viewBox="0 0 16 16" fill="none" stroke="#000" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5l3 3 6-7"/></svg>',
+    plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+    more: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9.5"/><circle cx="7.7" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="16.3" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg>',
+    left: '<svg viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 1.5L1.5 8.5l7 7"/></svg>',
+    right: '<svg viewBox="0 0 10 17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5l7 7-7 7"/></svg>',
+    chev: '<svg class="chev" viewBox="0 0 8 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 1.5l5 5-5 5"/></svg>'
+  };
+
+  function ring(p) {
+    p = Math.max(0, Math.min(1, p));
+    var r = 24, c = 2 * Math.PI * r, off = c * (1 - p);
+    var fg = p > 0 ? '<circle cx="28" cy="28" r="24" fill="none" stroke="#0a84ff" stroke-width="7" stroke-linecap="round" stroke-dasharray="' + c.toFixed(2) + '" stroke-dashoffset="' + off.toFixed(2) + '" transform="rotate(-90 28 28)"/>' : '';
+    return '<svg class="ring" viewBox="0 0 56 56"><circle cx="28" cy="28" r="24" fill="none" stroke="rgba(10,132,255,.22)" stroke-width="7"/>' + fg + '</svg>';
+  }
+
+  function topbar() {
+    return '<div class="topbar"><button class="iconbtn" data-act="settings" aria-label="Einstellungen">' + IC.more + '</button>' +
+      '<button class="iconbtn" data-act="add" aria-label="Gewohnheit hinzufügen">' + IC.plus + '</button></div>';
+  }
+
+  function bannerHtml() {
+    if (!state.habits.length) return '';
+    var ref = state.lastExport || state.firstUse;
+    var n = daysBetween(ref, todayKey());
+    if (n < 7) return '';
+    var t = state.lastExport ? 'Letzte Sicherung vor ' + n + ' Tagen' : 'Noch keine Sicherung';
+    return '<div class="banner"><div class="t">' + t + '<small>Sichere deine Daten in deiner iCloud.</small></div><button data-act="export">Sichern</button></div>';
+  }
+
+  /* ---------- Tagesansicht ---------- */
+  function row(h, k, sub, ok, extra) {
+    var on = isDone(h, k);
+    var dis = k > todayKey();
+    var pop = popKey === h.id + '|' + k ? ' pop' : '';
+    return '<div class="row' + (on ? ' done' : '') + '">' +
+      '<button class="check' + (on ? ' on' : '') + pop + '" data-act="toggle" data-h="' + h.id + '" data-k="' + k + '"' + (dis ? ' disabled' : '') +
+      ' aria-label="' + esc(h.name) + (on ? ' erledigt' : ' offen') + '">' + IC.check + '</button>' +
+      '<button class="txt" data-act="edit" data-h="' + h.id + '"><div class="txtin"><div class="name">' + esc(h.name) + '</div>' +
+      (sub ? '<div class="sub' + (ok ? ' ok' : '') + '">' + sub + '</div>' : '') + (extra || '') + '</div>' + IC.chev + '</button></div>';
+  }
+
+  function renderDay() {
+    var t = todayKey(), k = sel, mon = mondayOf(k), isToday = k === t, d = fromKey(k);
+    var h = topbar();
+    h += '<h1 class="title">' + (isToday ? 'Heute' : WDL[wdOf(k)]) + '</h1>';
+    h += '<div class="subtitle"><span>' + (isToday ? WDL[wdOf(k)] + ', ' : '') + d.getDate() + '. ' + MON[d.getMonth()] + ' ' + d.getFullYear() + '</span>' +
+      (isToday ? '' : '<button class="pill" data-act="today">Heute</button>') + '</div>';
+
+    h += '<div class="strip"><button class="nav" data-act="dayprev" aria-label="Vorherige Woche">' + IC.left + '</button><div class="days">';
+    for (var i = 0; i < 7; i++) {
+      var dk = addDays(mon, i), cls = 'day';
+      if (dk === t) cls += ' today';
+      if (dk === k) cls += ' sel';
+      if (dk > t) cls += ' future';
+      var dot = '';
+      if (dk <= t) {
+        var list = state.habits.filter(function (x) { return due(x, dk); });
+        if (list.length) {
+          var n = list.filter(function (x) { return isDone(x, dk); }).length;
+          dot = n === list.length ? 'full' : (n > 0 ? 'part' : '');
+        }
+      }
+      h += '<button class="' + cls + '" data-act="sel" data-k="' + dk + '"><span class="wd">' + WD[i] + '</span><span class="num">' + fromKey(dk).getDate() + '</span><span class="dot ' + dot + '"></span></button>';
+    }
+    h += '</div><button class="nav" data-act="daynext" aria-label="Nächste Woche">' + IC.right + '</button></div>';
+
+    if (isToday) h += bannerHtml();
+
+    if (!state.habits.some(function (x) { return !x.archivedAt; })) {
+      h += '<div class="empty"><h3>Noch keine Gewohnheiten</h3><p>Lege deine erste Gewohnheit an. Täglich, an festen Wochentagen oder als Wochenziel.</p><button class="btn" data-act="add">Gewohnheit anlegen</button></div>';
+      return h;
+    }
+
+    var daily = state.habits.filter(function (x) { return x.type === 'daily' && active(x, k); });
+    var wday = state.habits.filter(function (x) { return x.type === 'weekdays' && due(x, k); });
+    var weekly = state.habits.filter(function (x) { return x.type === 'weekly' && active(x, k); });
+    var dueList = daily.concat(wday);
+    var doneN = dueList.filter(function (x) { return isDone(x, k); }).length;
+
+    if (dueList.length) {
+      var all = doneN === dueList.length;
+      h += '<div class="summary">' + ring(doneN / dueList.length) + '<div><div class="big">' + doneN + ' von ' + dueList.length + '</div><div class="small">' +
+        (all ? 'Alles erledigt' : (isToday ? 'heute erledigt' : 'erledigt')) + '</div></div></div>';
+    }
+    if (k > t) h += '<p class="note" style="margin-top:-12px">Zukünftige Tage kannst du ansehen, aber noch nicht abhaken.</p>';
+
+    if (daily.length) {
+      h += '<div class="section"><div class="shead">Täglich</div><div class="group">' +
+        daily.map(function (x) { return row(x, k, '', false); }).join('') + '</div></div>';
+    }
+    if (wday.length) {
+      h += '<div class="section"><div class="shead">' + (isToday ? 'Heute fällig' : 'An diesem Tag fällig') + '</div><div class="group">' +
+        wday.map(function (x) { return row(x, k, '', false); }).join('') + '</div></div>';
+    }
+    if (weekly.length) {
+      h += '<div class="section"><div class="shead">Wochenziele</div><div class="group">' +
+        weekly.map(function (x) {
+          var c = weekCount(x, mon), ok = c >= x.target;
+          var sub = ok ? 'Ziel erreicht \u00b7 ' + c + ' von ' + x.target : c + ' von ' + x.target + ' diese Woche';
+          var bar = '<div class="mini"><span style="width:' + Math.min(100, Math.round(c / x.target * 100)) + '%"></span></div>';
+          return row(x, k, sub, ok, bar);
+        }).join('') + '</div></div>';
+    }
+    if (!daily.length && !wday.length && !weekly.length) {
+      h += '<div class="empty"><h3>Nichts geplant</h3><p>An diesem Tag ist keine Gewohnheit fällig.</p></div>';
+    }
+    return h;
+  }
+
+  /* ---------- Wochenansicht ---------- */
+  function wcard(h, mon) {
+    var t = todayKey(), cells = '', dueN = 0, doneN = 0;
+    for (var i = 0; i < 7; i++) {
+      var dk = addDays(mon, i), st;
+      if (!active(h, dk)) st = 'na';
+      else if (h.type !== 'weekly' && !due(h, dk)) st = 'off';
+      else if (isDone(h, dk)) st = 'done';
+      else if (dk > t) st = 'future';
+      else st = 'open';
+      if (h.type !== 'weekly' && st !== 'na' && st !== 'off') { dueN++; if (st === 'done') doneN++; }
+      var can = st === 'done' || st === 'open';
+      var pop = popKey === h.id + '|' + dk ? ' class="pop"' : '';
+      cells += '<button class="cell ' + st + '"' + (can ? ' data-act="toggle" data-h="' + h.id + '" data-k="' + dk + '"' : ' disabled') +
+        ' aria-label="' + esc(h.name) + ', ' + WDL[i] + '"><i' + pop + '>' + IC.check + '</i></button>';
+    }
+    var meta, ok, bar = '';
+    if (h.type === 'weekly') {
+      var c = weekCount(h, mon);
+      ok = c >= h.target;
+      meta = c + ' / ' + h.target;
+      bar = '<div class="wbar"><span style="width:' + Math.min(100, Math.round(c / h.target * 100)) + '%"></span></div>';
+    } else {
+      ok = dueN > 0 && doneN === dueN;
+      meta = doneN + ' / ' + dueN;
+    }
+    var nameEl = h.archivedAt
+      ? '<div class="wtop"><span class="wname">' + esc(h.name) + '</span><span class="wmeta">Archiviert</span></div>'
+      : '<button class="wtop" data-act="edit" data-h="' + h.id + '"><span class="wname">' + esc(h.name) + '</span><span class="wmeta' + (ok ? ' ok' : '') + '">' + meta + '</span></button>';
+    return '<div class="wcard">' + nameEl + '<div class="cells">' + cells + '</div>' + bar + '</div>';
+  }
+
+  function renderWeek() {
+    var t = todayKey(), mon = wk, sun = addDays(mon, 6), current = mon === mondayOf(t);
+    var h = topbar();
+    h += '<h1 class="title">KW ' + isoWeek(mon) + '</h1>';
+    h += '<div class="subtitle"><span>' + (current ? 'Diese Woche' : (mon > t ? 'Kommende Woche' : 'Vergangene Woche')) + '</span>' +
+      (current ? '' : '<button class="pill" data-act="thisweek">Diese Woche</button>') + '</div>';
+    h += '<div class="weeknav"><button class="nav" data-act="weekprev" aria-label="Vorherige Woche">' + IC.left + '</button><span class="range">' + fmtRange(mon, sun) +
+      '</span><button class="nav" data-act="weeknext" aria-label="Nächste Woche">' + IC.right + '</button></div>';
+
+    var visible = state.habits.filter(function (x) { return activeInWeek(x, mon); });
+    if (!state.habits.length) {
+      h += '<div class="empty"><h3>Noch keine Gewohnheiten</h3><p>Sobald du Gewohnheiten anlegst, siehst du hier deine Woche.</p><button class="btn" data-act="add">Gewohnheit anlegen</button></div>';
+      return h;
+    }
+
+    var tot = 0, dn = 0;
+    visible.forEach(function (x) {
+      if (x.type === 'weekly') {
+        if (mon <= t) { tot += x.target; dn += Math.min(weekCount(x, mon), x.target); }
+      } else {
+        for (var i = 0; i < 7; i++) {
+          var dk = addDays(mon, i);
+          if (dk <= t && due(x, dk)) { tot++; if (isDone(x, dk)) dn++; }
+        }
+      }
+    });
+    if (tot > 0) {
+      var pct = Math.round(dn / tot * 100);
+      h += '<div class="summary">' + ring(dn / tot) + '<div><div class="big">' + pct + ' %</div><div class="small">' + dn + ' von ' + tot + (current ? ' bisher erledigt' : ' erledigt') + '</div></div></div>';
+    } else {
+      h += '<div class="summary">' + ring(0) + '<div><div class="big">\u00b7</div><div class="small">' + (mon > t ? 'Diese Woche liegt noch vor dir' : 'In dieser Woche war nichts fällig') + '</div></div></div>';
+    }
+
+    if (!visible.length) {
+      h += '<div class="empty"><h3>Keine Gewohnheiten</h3><p>In dieser Woche war noch keine Gewohnheit aktiv.</p></div>';
+      return h;
+    }
+
+    h += '<div class="whead">';
+    for (var i = 0; i < 7; i++) {
+      var dk = addDays(mon, i);
+      h += '<button class="wh' + (dk === t ? ' today' : '') + '" data-act="gotoday" data-k="' + dk + '"><span class="wd">' + WD[i] + '</span><span class="n">' + fromKey(dk).getDate() + '</span></button>';
+    }
+    h += '</div>';
+
+    var groups = [['daily', 'Täglich'], ['weekdays', 'Feste Wochentage'], ['weekly', 'Wochenziele']];
+    groups.forEach(function (g) {
+      var list = visible.filter(function (x) { return x.type === g[0]; });
+      if (!list.length) return;
+      h += '<div class="section"><div class="shead">' + g[1] + '</div><div class="group">' + list.map(function (x) { return wcard(x, mon); }).join('') + '</div></div>';
+    });
+    h += '<p class="note" style="margin-top:-12px">Tippe auf einen Kreis zum Abhaken, auf einen Wochentag für die Tagesansicht.</p>';
+    return h;
+  }
+
+  /* ---------- Render ---------- */
+  function render() {
+    document.getElementById('app').innerHTML = view === 'day' ? renderDay() : renderWeek();
+    document.getElementById('tab-day').classList.toggle('active', view === 'day');
+    document.getElementById('tab-week').classList.toggle('active', view === 'week');
+    popKey = null;
+  }
+
+  /* ---------- Sheet ---------- */
+  function openSheet() {
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('sheet').classList.add('open');
+  }
+  function closeSheet() {
+    document.getElementById('overlay').classList.remove('open');
+    document.getElementById('sheet').classList.remove('open');
+    sheetMode = null;
+    form = null;
+    if (document.activeElement) document.activeElement.blur();
+  }
+  function formValid() { return form && form.name.trim().length > 0 && (form.type !== 'weekdays' || form.days.length > 0); }
+
+  function renderForm() {
+    var hints = {
+      daily: 'Jeden Tag abhaken.',
+      weekdays: 'Nur an den gewählten Tagen fällig.',
+      weekly: 'Irgendwann in der Woche erledigen, höchstens einmal pro Tag.'
+    };
+    var types = [['daily', 'Täglich'], ['weekdays', 'Wochentage'], ['weekly', 'Wochenziel']];
+    var h = '<div class="grabber"></div><div class="shbar"><button data-act="close">Abbrechen</button><span class="t">' + (form.id ? 'Bearbeiten' : 'Neue Gewohnheit') + '</span>' +
+      '<button class="r" id="savebtn" data-act="saveform"' + (formValid() ? '' : ' disabled') + '>' + (form.id ? 'Fertig' : 'Hinzufügen') + '</button></div><div class="shbody">';
+    h += '<div class="field"><input id="fname" type="text" placeholder="Name, z. B. Lesen" maxlength="60" autocomplete="off" value="' + esc(form.name) + '"></div>';
+    h += '<div class="label">Rhythmus</div><div class="seg">' + types.map(function (t) {
+      return '<button class="' + (form.type === t[0] ? 'on' : '') + '" data-act="ftype" data-v="' + t[0] + '">' + t[1] + '</button>';
+    }).join('') + '</div><p class="foot">' + hints[form.type] + '</p>';
+    if (form.type === 'weekdays') {
+      h += '<div class="label">An diesen Tagen</div><div class="chips">' + WD.map(function (w, i) {
+        return '<button class="chip' + (form.days.indexOf(i) >= 0 ? ' on' : '') + '" data-act="fday" data-v="' + i + '">' + w + '</button>';
+      }).join('') + '</div>';
+    }
+    if (form.type === 'weekly') {
+      h += '<div class="field"><div class="frow"><span>Ziel pro Woche</span><div class="stepwrap"><span class="stepval">' + form.target + 'x</span><div class="step">' +
+        '<button data-act="fminus"' + (form.target <= 1 ? ' disabled' : '') + ' aria-label="Weniger">\u2212</button>' +
+        '<button data-act="fplus"' + (form.target >= 7 ? ' disabled' : '') + ' aria-label="Mehr">+</button></div></div></div></div>';
+    }
+    h += '<div class="field"><div class="frow"><span>Startet am</span><input type="date" id="fstart" value="' + form.start + '"></div></div>';
+    h += '<p class="foot">Ab diesem Datum wird die Gewohnheit gezählt. Ein früheres Datum erlaubt dir, rückwirkend nachzutragen.</p>';
+    if (form.id) {
+      h += '<div class="field"><button class="lrow danger" data-act="archive">Archivieren</button></div>' +
+        '<p class="foot">Die Gewohnheit verschwindet ab heute aus deinen Ansichten, vergangene Wochen bleiben erhalten. Wiederherstellen kannst du sie über das Menü oben links.</p>';
+    }
+    return h + '</div>';
+  }
+
+  function renderSettings() {
+    var arch = state.habits.filter(function (x) { return x.archivedAt; });
+    var activeN = state.habits.length - arch.length;
+    var last = state.lastExport ? fmtShort(state.lastExport) : 'noch keine';
+    var h = '<div class="grabber"></div><div class="shbar"><span class="sp"></span><span class="t">Einstellungen</span><button class="r" data-act="close">Fertig</button></div><div class="shbody">';
+    h += '<div class="label">Datensicherung</div><div class="field"><button class="lrow" data-act="export">Sicherung exportieren</button><button class="lrow" data-act="import">Sicherung importieren</button></div>';
+    h += '<p class="foot">Letzte Sicherung: ' + last + '. Deine Daten liegen nur auf diesem iPhone. Speichere die Sicherung über \u201eIn Dateien sichern\u201c in deiner iCloud.</p>';
+    if (!storageOK) h += '<p class="foot warn">Der Speicher ist gerade nicht verfügbar. Änderungen gehen beim Schließen verloren.</p>';
+    h += '<div class="label">Archiviert</div><div class="field">';
+    if (arch.length) {
+      h += arch.map(function (x) {
+        return '<div class="arow"><div class="atxt"><div class="name">' + esc(x.name) + '</div><div class="sub">seit ' + fmtShort(x.archivedAt) + '</div></div>' +
+          '<button class="abtn" data-act="restore" data-h="' + x.id + '">Zurückholen</button><button class="abtn red" data-act="purge" data-h="' + x.id + '">Löschen</button></div>';
+      }).join('');
+    } else {
+      h += '<div class="frow"><span class="muted">Keine archivierten Gewohnheiten</span></div>';
+    }
+    h += '</div><p class="foot">Löschen entfernt eine archivierte Gewohnheit samt Verlauf endgültig.</p>';
+    h += '<div class="label">Info</div><div class="field"><div class="frow"><span>Aktive Gewohnheiten</span><span class="muted">' + activeN + '</span></div>' +
+      '<div class="frow"><span>Wochenbeginn</span><span class="muted">Montag</span></div></div>';
+    return h + '</div>';
+  }
+
+  function renderSheet() {
+    var el = document.getElementById('sheet');
+    var body = el.querySelector('.shbody');
+    var scroll = body ? body.scrollTop : 0;
+    el.innerHTML = sheetMode === 'form' ? renderForm() : renderSettings();
+    var nb = el.querySelector('.shbody');
+    if (nb) nb.scrollTop = scroll;
+    var inp = document.getElementById('fname');
+    if (inp) inp.addEventListener('input', function () {
+      form.name = inp.value;
+      document.getElementById('savebtn').disabled = !formValid();
+    });
+    var ds = document.getElementById('fstart');
+    if (ds) ds.addEventListener('change', function () { if (ds.value) form.start = ds.value; });
+  }
+
+  function openForm(id) {
+    var x = id ? state.habits.find(function (h) { return h.id === id; }) : null;
+    form = x
+      ? { id: x.id, name: x.name, type: x.type, days: x.days.slice(), target: x.target, start: x.start }
+      : { id: null, name: '', type: 'daily', days: [], target: 1, start: todayKey() };
+    sheetMode = 'form';
+    renderSheet();
+    openSheet();
+  }
+
+  function saveForm() {
+    if (!formValid()) return;
+    var data = {
+      name: form.name.trim(),
+      type: form.type,
+      days: form.type === 'weekdays' ? form.days.slice().sort() : [],
+      target: form.type === 'weekly' ? form.target : 1,
+      start: form.start || todayKey()
+    };
+    if (form.id) {
+      var x = state.habits.find(function (h) { return h.id === form.id; });
+      if (x) { for (var p in data) x[p] = data[p]; }
+    } else {
+      data.id = uid();
+      data.archivedAt = null;
+      state.habits.push(data);
+    }
+    save();
+    closeSheet();
+    render();
+  }
+
+  /* ---------- Sicherung ---------- */
+  function markExported() {
+    state.lastExport = todayKey();
+    save();
+    render();
+    if (sheetMode === 'settings') renderSheet();
+  }
+
+  function exportData() {
+    var json = JSON.stringify(state, null, 2);
+    var name = 'gewohnheiten-sicherung-' + todayKey() + '.json';
+    var file = null;
+    try { file = new File([json], name, { type: 'application/json' }); } catch (e) {}
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: 'Gewohnheiten Sicherung' })
+        .then(function () { markExported(); toast('Sicherung erstellt'); })
+        .catch(function (e) { if (e && e.name !== 'AbortError') downloadFallback(json, name); });
+      return;
+    }
+    downloadFallback(json, name);
+  }
+  function downloadFallback(json, name) {
+    var blob = new Blob([json], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 1000);
+    markExported();
+    toast('Sicherung heruntergeladen');
+  }
+
+  var fileInput = document.getElementById('importfile');
+  fileInput.addEventListener('change', function () {
+    var f = fileInput.files && fileInput.files[0];
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var s = normalize(JSON.parse(reader.result));
+        if (!s) throw new Error('ungueltig');
+        if (!confirm('Deine aktuellen Daten werden durch die Sicherung ersetzt. Fortfahren?')) return;
+        state = s;
+        save();
+        render();
+        if (sheetMode === 'settings') renderSheet();
+        toast('Sicherung geladen');
+      } catch (e) {
+        alert('Die Datei ist keine gültige Sicherung.');
+      } finally {
+        fileInput.value = '';
+      }
+    };
+    reader.readAsText(f);
+  });
+
+  /* ---------- Toast ---------- */
+  var toastTimer = null;
+  function toast(msg) {
+    var el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.classList.remove('show'); }, 1800);
+  }
+
+  /* ---------- Aktionen ---------- */
+  function toggle(id, k) {
+    if (k > todayKey()) return;
+    var m = state.done[id] || (state.done[id] = {});
+    if (m[k]) delete m[k]; else { m[k] = 1; popKey = id + '|' + k; }
+    save();
+    render();
+  }
+
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-act]');
+    if (!el || el.disabled) return;
+    var a = el.getAttribute('data-act');
+    var id = el.getAttribute('data-h');
+    var k = el.getAttribute('data-k');
+    var v = el.getAttribute('data-v');
+    var x;
+    switch (a) {
+      case 'toggle': toggle(id, k); break;
+      case 'sel': sel = k; render(); break;
+      case 'today': sel = todayKey(); render(); break;
+      case 'dayprev': sel = addDays(sel, -7); render(); break;
+      case 'daynext': sel = addDays(sel, 7); render(); break;
+      case 'weekprev': wk = addDays(wk, -7); render(); break;
+      case 'weeknext': wk = addDays(wk, 7); render(); break;
+      case 'thisweek': wk = mondayOf(todayKey()); render(); break;
+      case 'gotoday': sel = k; view = 'day'; render(); window.scrollTo(0, 0); break;
+      case 'tab':
+        if (v === view) { window.scrollTo({ top: 0, behavior: 'smooth' }); break; }
+        view = v;
+        if (view === 'week') wk = mondayOf(sel);
+        render();
+        window.scrollTo(0, 0);
+        break;
+      case 'add': openForm(null); break;
+      case 'edit': openForm(id); break;
+      case 'settings': sheetMode = 'settings'; renderSheet(); openSheet(); break;
+      case 'close': closeSheet(); break;
+      case 'ftype': form.type = v; renderSheet(); break;
+      case 'fday':
+        var n = +v, i = form.days.indexOf(n);
+        if (i >= 0) form.days.splice(i, 1); else form.days.push(n);
+        renderSheet();
+        break;
+      case 'fminus': form.target = Math.max(1, form.target - 1); renderSheet(); break;
+      case 'fplus': form.target = Math.min(7, form.target + 1); renderSheet(); break;
+      case 'saveform': saveForm(); break;
+      case 'archive':
+        x = state.habits.find(function (h) { return h.id === form.id; });
+        if (x && confirm('\u201e' + x.name + '\u201c archivieren?')) {
+          x.archivedAt = todayKey();
+          save();
+          closeSheet();
+          render();
+          toast('Archiviert');
+        }
+        break;
+      case 'restore':
+        x = state.habits.find(function (h) { return h.id === id; });
+        if (x) { x.archivedAt = null; save(); render(); renderSheet(); toast('Zurückgeholt'); }
+        break;
+      case 'purge':
+        x = state.habits.find(function (h) { return h.id === id; });
+        if (x && confirm('\u201e' + x.name + '\u201c endgültig löschen? Der Verlauf geht verloren.')) {
+          state.habits = state.habits.filter(function (h) { return h.id !== id; });
+          delete state.done[id];
+          save();
+          render();
+          renderSheet();
+        }
+        break;
+      case 'export': exportData(); break;
+      case 'import': fileInput.click(); break;
+    }
+  });
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState !== 'visible') return;
+    var t = todayKey();
+    if (t !== lastToday) {
+      if (sel === lastToday) sel = t;
+      if (wk === mondayOf(lastToday)) wk = mondayOf(t);
+      lastToday = t;
+    }
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
